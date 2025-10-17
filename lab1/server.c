@@ -42,7 +42,7 @@ void IntToString(int number, char* buffer) {
     
     if (number < 0) {
         buffer[position] = '-';
-        position = position + 1;
+        position++;
         number = -number;
     }
     
@@ -69,12 +69,8 @@ int IsPrime(int number) {
     if (number <= 3) {
         return 1;
     }
-    if (number % 2 == 0 || number % 3 == 0) {
-        return 0;
-    }
-    
-    for (int divisor = 5; divisor * divisor <= number; divisor = divisor + 6) {
-        if (number % divisor == 0 || number % (divisor + 2) == 0) {
+    for (int i = 3; i * i <= number; i += 2) {
+        if (number % i == 0) {
             return 0;
         }
     }
@@ -84,20 +80,20 @@ int IsPrime(int number) {
 void WriteToFile(int fileDescriptor, const char* str) {
     size_t length = 0;
     while (str[length] != '\0') {
-        length = length + 1;
+        length++;
     }
     write(fileDescriptor, str, length);
 }
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        WriteToFile(STDERR_FILENO, "Usage: server <filename>\n");
+        WriteToFile(STDERR_FILENO, "Ошибка ввода\n");
         return 1;
     }
 
     int outputFile = open(argv[1], O_WRONLY | O_CREAT | O_APPEND, 0600);
     if (outputFile == -1) {
-        WriteToFile(STDERR_FILENO, "Error: failed to open file\n");
+        WriteToFile(STDERR_FILENO, "Ошибка открытия файла\n");
         return 1;
     }
 
@@ -131,7 +127,6 @@ int main(int argc, char* argv[]) {
             exit(0);
         } 
         else {
-            WriteToFile(outputFile, "Composite: ");
             char numberString[32];
             IntToString(number, numberString);
             WriteToFile(outputFile, numberString);

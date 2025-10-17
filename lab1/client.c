@@ -1,3 +1,4 @@
+#include <stdio.h>
 #include <unistd.h>
 #include <sys/wait.h>
 #include <fcntl.h>
@@ -50,14 +51,14 @@ int ReadInput(char* buffer, size_t size) {
 void WriteString(int fileDescriptor, const char* str) {
     size_t length = 0;
     while (str[length] != '\0') {
-        length = length + 1;
+        length++;
     }
     write(fileDescriptor, str, length);
 }
 
 int main(int argc, char* argv[]) {
     if (argc != 2) {
-        WriteString(STDERR_FILENO, "Usage: client <filename>\n");
+        WriteString(STDERR_FILENO, "Неправильый ввод\n");
         return 1;
     }
 
@@ -65,14 +66,14 @@ int main(int argc, char* argv[]) {
     int pipe2[2];
     
     if (pipe(pipe1) == -1 || pipe(pipe2) == -1) {
-        WriteString(STDERR_FILENO, "Error: failed to create pipes\n");
+        WriteString(STDERR_FILENO, "Ошибка пайпов\n");
         return 1;
     }
 
     pid_t childPid = fork();
     
     if (childPid == -1) {
-        WriteString(STDERR_FILENO, "Error: failed to fork\n");
+        WriteString(STDERR_FILENO, "Ошибка форканья\n");
         return 1;
     }
 
@@ -89,7 +90,7 @@ int main(int argc, char* argv[]) {
         char* args[] = {"server", argv[1], NULL};
         execv("./server", args);
         
-        WriteString(STDERR_FILENO, "Error: failed to execute server\n");
+        WriteString(STDERR_FILENO, "Ошибка запуска сервера\n");
         exit(1);
         
     } else {
@@ -97,9 +98,9 @@ int main(int argc, char* argv[]) {
         close(pipe1[0]);
         close(pipe2[1]);
         
-        WriteString(STDOUT_FILENO, "Enter numbers (one per line, empty line to exit):\n");
+        WriteString(STDOUT_FILENO, "Вводите числа по 1 в строке \n");
         
-        char inputBuffer[256];
+        char inputBuffer[BUFSIZ];
         
         while (1) {
             WriteString(STDOUT_FILENO, "> ");
@@ -109,22 +110,22 @@ int main(int argc, char* argv[]) {
             }
             
             if (inputBuffer[0] == '\0') {
-                WriteString(STDOUT_FILENO, "Empty line - exiting...\n");
+                WriteString(STDOUT_FILENO, "Пустой ввод\n");
                 break;
             }
             
             if (!IsValidInteger(inputBuffer)) {
-                WriteString(STDOUT_FILENO, "Error: invalid integer. Exiting...\n");
+                WriteString(STDOUT_FILENO, "Неподходящий ввод\n");
                 break;
             }
             
             size_t inputLength = 0;
             while (inputBuffer[inputLength] != '\0') {
-                inputLength = inputLength + 1;
+                inputLength++;
             }
             
-            char numberMessage[256];
-            for (size_t index = 0; index < inputLength; index = index + 1) {
+            char numberMessage[BUFSIZ];
+            for (size_t index = 0; index < inputLength; index++) {
                 numberMessage[index] = inputBuffer[index];
             }
             numberMessage[inputLength] = '\n';
@@ -134,7 +135,7 @@ int main(int argc, char* argv[]) {
             int childStatus;
             pid_t waitResult = waitpid(childPid, &childStatus, WNOHANG);
             if (waitResult == childPid) {
-                WriteString(STDOUT_FILENO, "Prime or negative number detected. Processes terminated.\n");
+                WriteString(STDOUT_FILENO, "Неправильный ввод\n");
                 break;
             }
             
@@ -147,7 +148,7 @@ int main(int argc, char* argv[]) {
                 if (bytesRead >= 4 && 
                     responseBuffer[0] == 'E' && responseBuffer[1] == 'X' && 
                     responseBuffer[2] == 'I' && responseBuffer[3] == 'T') {
-                    WriteString(STDOUT_FILENO, "Prime or negative number detected. Processes terminated.\n");
+                    WriteString(STDOUT_FILENO, "Неправильный ввод\n");
                     break;
                 }
             }
